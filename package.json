@@ -1,0 +1,53 @@
+{
+  "name": "nigeria-paye",
+  "version": "1.0.0",
+  "description": "Nigerian PAYE, pension, NHF and take-home pay under the Nigeria Tax Act 2025 (2026), with a comparison against the old law. Zero dependencies.",
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [
+    "nigeria",
+    "paye",
+    "tax",
+    "income-tax",
+    "payroll",
+    "salary",
+    "take-home-pay",
+    "nigeria-tax-act",
+    "pension",
+    "nhf",
+    "naira",
+    "hr",
+    "fintech",
+    "africa"
+  ],
+  "author": "Orion Soft Limited <orionsoftlimited@gmail.com> (https://www.orionsoftlimited.com)",
+  "license": "MIT",
+  "homepage": "https://www.orionsoftlimited.com/developers",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/orionsoftlimited/nigeria-paye.git"
+  },
+  "bugs": {
+    "url": "https://github.com/orionsoftlimited/nigeria-paye/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": false
+}
