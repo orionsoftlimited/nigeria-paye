@@ -29,10 +29,18 @@ export const PAYE_BANDS = [
   [Infinity, 0.25],
 ];
 
+// Values that cannot retain annual monetary precision are invalid inputs.
+const moneyInput = value => {
+  try {
+    const n = Number(value);
+    return Number.isFinite(n) && Math.abs(n) <= Number.MAX_SAFE_INTEGER / 1200 ? Math.max(0, n) : 0;
+  } catch { return 0; }
+};
+
 const r2 = n => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 
 export function annualPaye(chargeable) {
-  let left = Math.max(0, Number(chargeable) || 0), tax = 0;
+  let left = moneyInput(chargeable), tax = 0;
   for (const [width, rate] of PAYE_BANDS) {
     const slice = Math.min(left, width);
     tax += slice * rate;
@@ -50,14 +58,15 @@ export function annualPaye(chargeable) {
 //   nhis         monthly health insurance contribution by the employee
 //   pension      false to skip pension (e.g. fewer than 3 staff, or exempt)
 export function computeNigerianPayroll(grossMonthly, opts = {}) {
-  const gross = Math.max(0, Number(grossMonthly) || 0);
-  const pensionable = Math.min(gross, Math.max(0, Number(opts.pensionable ?? gross) || 0));
-  const basic = Math.min(pensionable, Math.max(0, Number(opts.basic ?? pensionable) || 0));
+  opts = opts && typeof opts === "object" ? opts : {};
+  const gross = moneyInput(grossMonthly);
+  const pensionable = Math.min(gross, moneyInput(opts.pensionable ?? gross));
+  const basic = Math.min(pensionable, moneyInput(opts.basic ?? pensionable));
   const pensionEe = opts.pension === false ? 0 : r2(pensionable * 0.08);
   const pensionEr = opts.pension === false ? 0 : r2(pensionable * 0.10);
   const nhf = opts.nhf ? r2(basic * 0.025) : 0;
-  const nhis = Math.max(0, Number(opts.nhis) || 0);
-  const rentRelief = Math.min(500_000, Math.max(0, Number(opts.annualRent) || 0) * 0.2);
+  const nhis = moneyInput(opts.nhis);
+  const rentRelief = Math.min(500_000, moneyInput(opts.annualRent) * 0.2);
   const annualGross = gross * 12;
   const chargeable = Math.max(0, annualGross - (pensionEe + nhf + nhis) * 12 - rentRelief);
   const paye = r2(annualPaye(chargeable) / 12);
@@ -85,7 +94,7 @@ export function computeNigerianPayroll(grossMonthly, opts = {}) {
 
 // How much of `taxable` falls in each band and the tax on it.
 export function bandBreakdown(taxable, bands = PAYE_BANDS) {
-  let left = Math.max(0, Number(taxable) || 0);
+  let left = moneyInput(taxable);
   return bands.map(([width, rate]) => {
     const slice = Math.min(left, width);
     left -= slice;
@@ -99,11 +108,11 @@ export function bandBreakdown(taxable, bands = PAYE_BANDS) {
 // minimum-wage earners (₦70,000 a month) exempt.
 export const OLD_PITA_BANDS = [[300_000, 0.07], [300_000, 0.11], [500_000, 0.15], [500_000, 0.19], [1_600_000, 0.21], [Infinity, 0.24]];
 export function oldLawMonthlyPaye(grossMonthly, reliefsMonthly = 0) {
-  const gross = Math.max(0, Number(grossMonthly) || 0);
+  const gross = moneyInput(grossMonthly);
   if (gross <= 70_000) return 0;
   const annual = gross * 12;
   const cra = Math.max(200_000, annual * 0.01) + annual * 0.2;
-  const taxable = Math.max(0, annual - cra - Math.max(0, Number(reliefsMonthly) || 0) * 12);
+  const taxable = Math.max(0, annual - cra - moneyInput(reliefsMonthly) * 12);
   const tax = bandBreakdown(taxable, OLD_PITA_BANDS).reduce((s, b) => s + b.tax, 0);
   return r2(Math.max(tax, annual * 0.01) / 12);
 }
